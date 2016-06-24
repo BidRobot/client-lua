@@ -54,7 +54,7 @@ static as_record add_bins_to_rec(lua_State *L, int index, int numBins)
         } else if (lua_istable(L, -2)){
 	    	// make a as_list and populate it
         	as_arraylist *list = as_arraylist_new(3, 3);
-            
+
         	lua_pushvalue(L, -2);
         	lua_pushnil(L);
         	    // This is needed for it to even get the first value
@@ -69,7 +69,7 @@ static as_record add_bins_to_rec(lua_State *L, int index, int numBins)
         	        lua_pop(L, 2);
         	    }
         	lua_pop(L, 1);
-            
+
 	    	// put the list in a bin
         	as_record_set_list(&rec, binName, (as_list*)as_val_reserve(list));
         }
@@ -108,9 +108,9 @@ static as_operations add_bins_to_increment(lua_State *L, int index, int numBins)
         // stack now contains: -1 => key; -2 => value; -3 => key; -4 => table
         const char *binName = lua_tostring(L, -1);
         int intValue = lua_tointeger(L, -2);
-        
+
         //printf("Bin:%s, value:%d\n", binName, intValue);
-        
+
     	//add an operation for each bin
     	as_operations_add_incr(&ops, binName, intValue);
         // pop value + copy of key, leaving original key
@@ -185,7 +185,7 @@ static int get(lua_State *L){
 
 	// Create an new table and push it
 	if ( err.code == AEROSPIKE_OK){
-        
+
 		lua_newtable(L); /* create table to hold Bins read */
 		/*
 		 * iterate through bin and add the bin name
@@ -198,19 +198,19 @@ static int get(lua_State *L){
 		    as_bin *bin        = as_record_iterator_next(&it);
 		    as_val *value      = (as_val*)as_bin_get_value(bin);
             char * binName = as_bin_get_name(bin);
-            
+
 		    int bin_type = as_val_type(value); //Bin Type
 
 		    switch (bin_type){
 		    case AS_INTEGER:
-                   
+
 		    	//printf("--integer-%s-\n", binName);
 			    lua_pushstring(L, binName); //Bin name
 		    	lua_pushnumber(L, as_integer_get(as_integer_fromval(value)));
 		    	//printf("--integer-end-\n");
 		    	break;
 		    case AS_DOUBLE:
-                   
+
 		    	//printf("--double-%s-\n", binName);
 			    lua_pushstring(L, binName); //Bin name
 		    	lua_pushnumber(L, as_double_get(as_double_fromval(value)));
@@ -229,10 +229,10 @@ static int get(lua_State *L){
 		    	as_list* p_list = as_list_fromval(value);
 		    	as_arraylist_iterator it;
 		    	as_arraylist_iterator_init(&it, (const as_arraylist*)p_list);
-                    
+
                 // create a Lua inner table table for the "List"
 		    	lua_newtable(L);
-                    
+
 		    	int count = 0;
 		    	// See if the elements match what we expect.
 		    	while (as_arraylist_iterator_has_next(&it)) {
@@ -280,6 +280,8 @@ static int put(lua_State *L){
 
 	//Bins
 	as_record rec = add_bins_to_rec(L, 6, numBins);
+
+    rec.ttl = lua_tointeger(L, 7);
 
 	//const as_record * test = &rec;
 	//if (as_val_type(as_record_get(test, "animals")) == AS_LIST)
@@ -341,4 +343,3 @@ extern int luaopen_as_lua(lua_State *L){
 	luaL_register(L, "as_lua", as_client);
 	return 0;
 }
-
